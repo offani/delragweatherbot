@@ -1,6 +1,6 @@
 import os
 from langsmith import Client
-from langchain.smith import RunEvalConfig, run_on_dataset
+from langsmith import RunEvalConfig, run_on_dataset
 from langchain_groq import ChatGroq
 from src.graph import graph
 
@@ -40,7 +40,7 @@ def run_evaluation():
     dataset_name = "Weather_RAG_Eval_Dataset"
     create_dataset() # Ensure dataset exists
     
-    llm = ChatGroq(model="mixtral-8x7b-32768", temperature=0)
+    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
     
     eval_config = RunEvalConfig(
         evaluators=[
