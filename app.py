@@ -46,7 +46,12 @@ if prompt := st.chat_input("Ask about weather (e.g. 'Weather in London') or your
         try:
             inputs = {"question": prompt}
             
-            # Stream events from the graph
+            # Run the graph
+            # For true streaming of the final LLM response, we would need to yield tokens from the generate node. 
+            # Here we visualize node execution steps.
+            
+            final_answer = ""
+            
             for output in graph.stream(inputs):
                 for key, value in output.items():
                     with steps_container:
@@ -62,11 +67,19 @@ if prompt := st.chat_input("Ask about weather (e.g. 'Weather in London') or your
                             context = value.get("context", "")
                             st.text(context[:500] + "..." if len(context) > 500 else context)
                         elif key == "generate":
-                            full_response = value.get("answer", "")
-                            # Don't display here, display in main chat
+                            final_answer = value.get("answer", "")
             
-            message_placeholder.markdown(full_response)
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            # Display final answer with typewriter effect (simulated streaming for visual)
+            import time
+            message_placeholder.markdown("")
+            streamed_text = ""
+            for char in final_answer:
+                streamed_text += char
+                message_placeholder.markdown(streamed_text + "▌")
+                time.sleep(0.005) # adjustable speed
+            message_placeholder.markdown(final_answer)
+            
+            st.session_state.messages.append({"role": "assistant", "content": final_answer})
             
         except Exception as e:
             st.error(f"An error occurred: {e}")

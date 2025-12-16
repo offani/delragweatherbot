@@ -27,25 +27,34 @@ def test_weather_api_success():
         assert "Temperature: 25°C" in result
 
 
+# Mock Pydantic models
+class MockRouterOutput:
+    def __init__(self, source):
+        self.source = source
+
+class MockCityExtraction:
+    def __init__(self, city):
+        self.city = city
+
 def test_router_node_weather():
     # Mock LLM to return "WEATHER"
-    with patch("src.nodes.llm") as mock_llm:
-        mock_llm.invoke.return_value.content = "WEATHER"
+    with patch("src.nodes.llm.with_structured_output") as mock_ws:
+        mock_ws.return_value.invoke.return_value = MockRouterOutput(source="weather")
         state = {"question": "What's the weather in Paris?", "context": "", "answer": "", "source": ""}
         result = router_node(state)
         assert result["source"] == "weather"
 
 def test_router_node_rag():
-    with patch("src.nodes.llm") as mock_llm:
-        mock_llm.invoke.return_value.content = "RAG"
+    with patch("src.nodes.llm.with_structured_output") as mock_ws:
+        mock_ws.return_value.invoke.return_value = MockRouterOutput(source="rag")
         state = {"question": "Summarize the document.", "context": "", "answer": "", "source": ""}
         result = router_node(state)
         assert result["source"] == "rag"
 
 def test_weather_node():
-    with patch("src.nodes.llm") as mock_llm:
+    with patch("src.nodes.llm.with_structured_output") as mock_ws:
         # Mock city extraction
-        mock_llm.invoke.return_value.content = "London"
+        mock_ws.return_value.invoke.return_value = MockCityExtraction(city="London")
         
         with patch("src.nodes.weather_api.get_weather") as mock_weather:
             mock_weather.return_value = "Sunny in London"

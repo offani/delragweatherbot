@@ -1,13 +1,26 @@
 from typing import TypedDict, Literal
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
+from pydantic import BaseModel, Field
 from src.weather import WeatherAPI
 from src.rag import RAGSystem
 
 # Initialize components
 weather_api = WeatherAPI()
 rag_system = RAGSystem()
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+llm = ChatGroq(model="mixtral-8x7b-32768", temperature=0)
+
+# Pydantic Models
+class RouterOutput(BaseModel):
+    """The target destination for the user query."""
+    source: Literal["weather", "rag"] = Field(
+        ..., 
+        description="The tool to use. 'weather' for live weather data, 'rag' for document questions."
+    )
+
+class CityExtraction(BaseModel):
+    """Extraction format for city names."""
+    city: str = Field(..., description="The name of the city extracted from the query.")
 
 class AgentState(TypedDict):
     question: str
@@ -19,27 +32,35 @@ def router_node(state: AgentState) -> dict:
     """Decides whether to route to Weather or RAG."""
     query = state["question"]
     
-    # Simple router using LLM
-    system = "You are a router. Your job is to classify the user's query into one of two categories: 'WEATHER' or 'RAG'. 'WEATHER' is for queries about current weather conditions in specific locations. 'RAG' is for general questions or questions about documents. Return ONLY the category name."
+    # Structured Output for Routing
+    structured_llm = llm.with_structured_output(RouterOutput)
+    
+    system = "You are a router. Classify the user's query."
     messages = [SystemMessage(content=system), HumanMessage(content=query)]
     
-    response = llm.invoke(messages).content.strip().upper()
-    
-    # Fallback/Safety
-    if "WEATHER" in response:
-        return {"source": "weather"}
-    else:
+    try:
+        result = structured_llm.invoke(messages)
+        return {"source": result.source}
+    except Exception:
+        # Fallback if structured output fails (rare)
         return {"source": "rag"}
 
 def weather_node(state: AgentState) -> dict:
     """Fetches weather data."""
     query = state["question"]
-    # Extract city using LLM for better accuracy
-    system = "Extract the city name from the query. Return ONLY the city name."
-    city = llm.invoke([SystemMessage(content=system), HumanMessage(content=query)]).content.strip()
     
-    result = weather_api.get_weather(city)
-    return {"context": result}
+    # Structured Output for City Extraction
+    structured_llm = llm.with_structured_output(CityExtraction)
+    system = "Extract the city name from the query."
+    
+    try:
+        result = structured_llm.invoke([SystemMessage(content=system), HumanMessage(content=query)])
+        city = result.city
+        result_text = weather_api.get_weather(city)
+    except Exception:
+        result_text = "Error: Could not extract city name."
+
+    return {"context": result_text}
 
 def rag_node(state: AgentState) -> dict:
     """Retrieves documents."""
