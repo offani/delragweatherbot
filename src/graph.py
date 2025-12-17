@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 from src.nodes import AgentState, router_node, weather_node, rag_node, generate_node
 
 def build_graph():
@@ -32,6 +33,8 @@ def build_graph():
     workflow.add_edge("rag", "generate")
     workflow.add_edge("generate", END)
 
-    return workflow.compile()
+    # Add checkpointer for conversation memory
+    memory = MemorySaver()
+    return workflow.compile(checkpointer=memory)
 
 graph = build_graph()

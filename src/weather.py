@@ -21,7 +21,7 @@ class WeatherAPI:
         }
 
         try:
-            response = requests.get(self.base_url, params=params)
+            response = requests.get(self.base_url, params=params,verify=False)
             response.raise_for_status()
             data = response.json()
             
