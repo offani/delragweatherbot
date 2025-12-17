@@ -37,4 +37,5 @@ def build_graph():
     memory = MemorySaver()
     return workflow.compile(checkpointer=memory)
 
+
 graph = build_graph()
