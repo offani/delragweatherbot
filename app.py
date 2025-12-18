@@ -11,9 +11,7 @@ load_dotenv()
 
 # Hardcoded credentials (for demonstration)
 USERS = {
-    "admin": "password123",
-    "user": "pass",
-    "test": "test"
+    "aniketh": os.getenv("pass"),
 }
 
 def login_page():
