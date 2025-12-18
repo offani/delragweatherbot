@@ -38,23 +38,23 @@ class MockCityExtraction:
 
 def test_router_node_weather():
     # Mock LLM to return "WEATHER"
-    with patch("src.nodes.llm.with_structured_output") as mock_ws:
-        mock_ws.return_value.invoke.return_value = MockRouterOutput(source="weather")
+    with patch("src.nodes.llm") as mock_llm:
+        mock_llm.with_structured_output.return_value.invoke.return_value = MockRouterOutput(source="weather")
         state = {"question": "What's the weather in Paris?", "context": "", "answer": "", "source": ""}
         result = router_node(state)
         assert result["source"] == "weather"
 
 def test_router_node_rag():
-    with patch("src.nodes.llm.with_structured_output") as mock_ws:
-        mock_ws.return_value.invoke.return_value = MockRouterOutput(source="rag")
+    with patch("src.nodes.llm") as mock_llm:
+        mock_llm.with_structured_output.return_value.invoke.return_value = MockRouterOutput(source="rag")
         state = {"question": "Summarize the document.", "context": "", "answer": "", "source": ""}
         result = router_node(state)
         assert result["source"] == "rag"
 
 def test_weather_node():
-    with patch("src.nodes.llm.with_structured_output") as mock_ws:
+    with patch("src.nodes.llm") as mock_llm:
         # Mock city extraction
-        mock_ws.return_value.invoke.return_value = MockCityExtraction(city="London")
+        mock_llm.with_structured_output.return_value.invoke.return_value = MockCityExtraction(city="London")
         
         with patch("src.nodes.weather_api.get_weather") as mock_weather:
             mock_weather.return_value = "Sunny in London"

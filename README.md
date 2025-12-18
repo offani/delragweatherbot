@@ -5,16 +5,20 @@ A simple, elegant AI agent pipeline built with LangGraph, LangChain, and Streaml
 ## Features
 
 - **Agentic Workflow**: Uses LangGraph to intelligently route queries between Weather and RAG tools.
-- **RAG Capability**: Ingests PDFs, creates embeddings (using HuggingFace), and retrieves relevant answers using Qdrant.
+- **Conversation Memory**: Maintains context across chat turns using `MemorySaver`.
+- **RAG Capability**: Ingests PDFs, creates embeddings (using **Ollama**), and retrieves relevant answers using Qdrant.
+- **PDF Management**: Upload, list, and delete PDFs directly from the UI.
 - **Real-time Weather**: Fetches live weather data from OpenWeatherMap.
 - **Visualization**: Streamlit UI shows the internal thought process (nodes visited, data retrieved).
-- **Evaluation**: Includes LangSmith evaluation script.
 
 ## Setup
 
 1.  **Prerequisites**:
     - Python 3.10+
     - [uv](https://github.com/astral-sh/uv) (Package Manager)
+    - [Ollama](https://ollama.com/) (for embeddings)
+      - Run: `ollama pull nomic-embed-text`
+      - Run: `ollama serve`
 
 2.  **Installation**:
     ```bash
@@ -39,7 +43,7 @@ uv run streamlit run app.py
 ```
 
 1.  **Weather**: Type "Weather in [City]" (e.g., "Weather in Mumbai").
-2.  **RAG**: Upload a PDF in the sidebar and ask questions about it.
+2.  **RAG**: Upload a PDF in the sidebar. You can also see listed PDFs and delete them.
 3.  **Visuals**: Expand "Processing Details" to see the intermediate steps.
 
 ### Run Tests

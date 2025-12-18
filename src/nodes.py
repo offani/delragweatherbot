@@ -110,7 +110,7 @@ def generate_node(state: AgentState) -> dict:
     RULES:
 1. For weather questions: ALWAYS be concise and provide accurate information.
 2. For greetings (hello, hi, hey): Respond warmly and ask how you can help with weather or document queries.
-3. For ANY other questions (facts, advice, etc): Politely decline and say: "I can help you with weather information and document queries."
+3. For ANY other questions (facts, advice, etc): Politely  request to ask weather or document queries and say: "Apologies, I can help you with weather information and document queries."
 4. Use the conversation history to maintain context and provide relevant responses.
 5. For document queries, always refer to the provided context.
 
