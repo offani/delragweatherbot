@@ -9,7 +9,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
 # from langchain_community.retrievers import ContextualCompressionRetriever
 # from langchain_community.retrievers. import LLMChainExtractor
-from langchain_groq import ChatGroq
+# from langchain_groq import ChatGroq
 from langchain_ollama import OllamaEmbeddings
 
 load_dotenv()
@@ -36,8 +36,9 @@ class RAGSystem:
             )
             
             # Initialize Compressor
-            llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0,api_key=os.getenv("GROQ_API_KEY"),http_client=httpx.Client(verify=False),
-            streaming=True)
+            # llm was here, removed to avoid early API key requirement since compressor is commented out
+            # If compressor is needed, pass api_key to __init__
+
             # self.compressor = LLMChainExtractor.from_llm(llm)
             self.initialized = True
         except Exception as e:

@@ -11,8 +11,23 @@ load_dotenv()
 # Initialize components
 weather_api = WeatherAPI()
 rag_system = RAGSystem()
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0,api_key=os.getenv("GROQ_API_KEY"),http_client=httpx.Client(verify=False),
-        streaming=True)
+# Global initialization removed to support dynamic API key
+# llm = ChatGroq(...)
+
+def get_llm():
+    """Lazily initialize LLM with current environment variable."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found in environment variables. Please login.")
+    
+    return ChatGroq(
+        model="llama-3.3-70b-versatile", 
+        temperature=0,
+        api_key=api_key,
+        http_client=httpx.Client(verify=False),
+        streaming=True
+    )
+
 
 # Pydantic Models
 class RouterOutput(BaseModel):
@@ -42,7 +57,7 @@ def router_node(state: AgentState) -> dict:
     query = state["question"]
     
     # Structured Output for Routing
-    structured_llm = llm.with_structured_output(RouterOutput)
+    structured_llm = get_llm().with_structured_output(RouterOutput)
     
     system = "You are a router. Classify the user's query. You have a realtime weather API and a document retrieval system (RAG). If the user is asking about current weather conditions, route to 'weather'. For all other queries, route to 'rag'. Respond ONLY with 'weather' or 'rag'."
     messages = [SystemMessage(content=system), HumanMessage(content=query)]
@@ -59,7 +74,7 @@ def weather_node(state: AgentState) -> dict:
     query = state["question"]
     
     # Structured Output for City Extraction
-    structured_llm = llm.with_structured_output(CityExtraction)
+    structured_llm = get_llm().with_structured_output(CityExtraction)
     system = "Extract the city name from the query."
     
     try:
@@ -109,7 +124,7 @@ def generate_node(state: AgentState) -> dict:
     # Add current query
     messages.append(HumanMessage(content=query))
     
-    response = llm.invoke(messages)
+    response = get_llm().invoke(messages)
     
     # Return with messages to update the checkpoint
     return {
