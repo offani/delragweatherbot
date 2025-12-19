@@ -10,7 +10,6 @@ from qdrant_client.models import VectorParams, Distance
 # from langchain_community.retrievers import ContextualCompressionRetriever
 # from langchain_community.retrievers. import LLMChainExtractor
 # from langchain_groq import ChatGroq
-from langchain_ollama import OllamaEmbeddings
 
 load_dotenv()
 
@@ -20,13 +19,18 @@ class RAGSystem:
         self.uploaded_pdfs = {}  # Track uploaded PDFs: {filename: {chunks: int, doc_ids: []}}
         try:
             self.client = QdrantClient(":memory:") 
-            self.embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://localhost:11434")
+            # Using HuggingFace embeddings - no local server needed, works on any machine
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'},
+                encode_kwargs={'normalize_embeddings': True}
+            )
             
-            # Ensure collection exists
+            # Ensure collection exists (384 dimensions for all-MiniLM-L6-v2)
             if not self.client.collection_exists(self.collection_name):
                 self.client.create_collection(
                     collection_name=self.collection_name,
-                    vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+                    vectors_config=VectorParams(size=384, distance=Distance.COSINE)
                 )
 
             self.vector_store = QdrantVectorStore(
