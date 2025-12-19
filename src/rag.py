@@ -17,6 +17,9 @@ class RAGSystem:
     def __init__(self, collection_name: str = "test_rag_collection"):
         self.collection_name = collection_name
         self.uploaded_pdfs = {}  # Track uploaded PDFs: {filename: {chunks: int, doc_ids: []}}
+        self.vector_store = None  # Initialize to None to avoid AttributeError
+        self.initialized = False
+        
         try:
             self.client = QdrantClient(":memory:") 
             # Using HuggingFace embeddings - no local server needed, works on any machine
@@ -45,12 +48,20 @@ class RAGSystem:
 
             # self.compressor = LLMChainExtractor.from_llm(llm)
             self.initialized = True
+            print("RAG System successfully initialized with HuggingFace Embeddings.")
         except Exception as e:
-            print(f"Warning: RAG system initialization failed: {e}")
+            # RAISE the error so deployment logs show it clearly
+            import traceback
+            traceback.print_exc()
+            print(f"CRITICAL ERROR: RAG system initialization failed: {e}")
             self.initialized = False
+            # We don't raise here to allow the app to start, but ingest/retrieve will fail gracefully
 
     def ingest_pdf(self, file_path: str, filename: str):
         """Ingests a PDF file into the vector database."""
+        if not self.initialized or self.vector_store is None:
+            return "Error: RAG System not initialized. Check server logs for details."
+
         if not os.path.exists(file_path):
             return f"Error: File '{file_path}' not found."
         
