@@ -16,8 +16,12 @@ RUN uv sync --frozen --no-install-project --no-dev
 # Copy the rest of the application
 COPY . .
 
-# Expose Streamlit port
+# Pre-load HuggingFace models to prevent runtime timeouts
+RUN uv run python preload_models.py
+
+# Expose port (default 8501, but Render will override)
 EXPOSE 8501
 
-# Run the app
-CMD ["uv", "run", "streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+# Run the app binding to Render's $PORT
+# "sh -c" is required for variable expansion
+CMD ["sh", "-c", "uv run streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8501}"]
