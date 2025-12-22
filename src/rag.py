@@ -21,7 +21,8 @@ class RAGSystem:
         self.initialized = False
         
         try:
-            self.client = QdrantClient(":memory:") 
+            # Use persistent disk storage
+            self.client = QdrantClient(path="qdrant_storage") 
             # Using HuggingFace embeddings - no local server needed, works on any machine
             self.embeddings = HuggingFaceEmbeddings(
                 model_name="sentence-transformers/all-MiniLM-L6-v2",
